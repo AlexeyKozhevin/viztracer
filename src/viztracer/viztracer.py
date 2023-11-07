@@ -34,7 +34,6 @@ class VizTracer(_VizTracer):
                  log_sparse: bool = False,
                  log_async: bool = False,
                  log_audit: Optional[Sequence[str]] = None,
-                 vdb: bool = False,
                  pid_suffix: bool = False,
                  file_info: bool = True,
                  register_global: bool = True,
@@ -55,7 +54,6 @@ class VizTracer(_VizTracer):
             log_func_retval=log_func_retval,
             log_print=log_print,
             log_gc=log_gc,
-            vdb=vdb,
             log_func_args=log_func_args,
             log_async=log_async,
             trace_self=trace_self,
@@ -116,7 +114,6 @@ class VizTracer(_VizTracer):
             "log_sparse": self.log_sparse,
             "log_async": self.log_async,
             "log_audit": self.log_audit,
-            "vdb": self.vdb,
             "pid_suffix": self.pid_suffix,
             "min_duration": self.min_duration,
             "dump_raw": self.dump_raw,
@@ -166,6 +163,12 @@ class VizTracer(_VizTracer):
     def log_event(self, event_name: str) -> VizEvent:
         call_frame = sys._getframe(1)
         return VizEvent(self, event_name, call_frame.f_code.co_filename, call_frame.f_lineno)
+
+    def shield_ignore(self, func, *args, **kwargs):
+        prev_ignore_stack = self.setignorestackcounter(0)
+        res = func(*args, **kwargs)
+        self.setignorestackcounter(prev_ignore_stack)
+        return res
 
     def set_afterfork(self, callback: Callable, *args, **kwargs) -> None:
         self._afterfork_cb = callback
